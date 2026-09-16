@@ -28,7 +28,8 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS gmp-dev libzip-dev \
 WORKDIR /var/www/html
 
 COPY --from=vendor /app /var/www/html
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache \
+ && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
