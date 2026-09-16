@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  app:
+    build: ./
+    restart: "always"
+    ports:
+      - 8080:8000
+    environment:
+      - APP_LANG=en
+      - STEAM_API_KEY=
