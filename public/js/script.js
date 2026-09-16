@@ -31,19 +31,6 @@
         });
     }
 
-    /* ---------- Navbar hamburger toggle ---------- */
-
-    var navToggle = document.getElementById('navToggle');
-    var navMenu = document.getElementById('navMenu');
-
-    if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function () {
-            var isOpen = navMenu.classList.toggle('is-open');
-            navToggle.classList.toggle('is-active', isOpen);
-            navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        });
-    }
-
     /* ---------- Flash message dismiss ---------- */
 
     document.querySelectorAll('[data-dismiss-flash]').forEach(function (btn) {

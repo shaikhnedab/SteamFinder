@@ -4,9 +4,6 @@ return [
 
     'title' => 'Steam Finder',
     'steam_finder' => '蒸汽探测器',
-    'home' => '家',
-    'website' => '主网站',
-    'vip_store' => 'VIP 商店',
 
     'enter_steamid' => '输入 SteamID',
     'search_placeholder' => 'SteamID / SteamID3 / SteamID64 / 自定义 URL / 完整 URL',

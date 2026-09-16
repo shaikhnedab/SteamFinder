@@ -4,9 +4,6 @@ return [
 
     'title' => 'Steam Finder',
     'steam_finder' => 'Steam Finder',
-    'home' => 'Home',
-    'website' => 'Main Website',
-    'vip_store' => 'VIP Store',
 
     'enter_steamid' => 'Enter SteamID',
     'search_placeholder' => 'SteamID / SteamID3 / SteamID64 / Custom URL / Complete URL',

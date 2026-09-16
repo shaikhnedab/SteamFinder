@@ -4,9 +4,6 @@ return [
 
     'title' => 'Buscador de Steam',
     'steam_finder' => 'Buscador de Steam',
-    'home' => 'Casa',
-    'website' => 'Sitio web principal',
-    'vip_store' => 'Tienda VIP',
 
     'enter_steamid' => 'Ingresar ID de Steam',
     'search_placeholder' => 'SteamID / SteamID3 / SteamID64 / URL personalizada / URL completa',

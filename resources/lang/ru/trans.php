@@ -4,9 +4,6 @@ return [
 
     'title' => 'Поиск Steam',
     'steam_finder' => 'Поиск Steam',
-    'home' => 'дом',
-    'website' => 'Основной сайт',
-    'vip_store' => 'VIP-магазин',
 
     'enter_steamid' => 'Введите SteamID',
     'search_placeholder' => 'SteamID / SteamID3 / SteamID64 / Пользовательский URL / Полный URL',

@@ -4,9 +4,6 @@ return [
 
     'title' => 'Steam Finder',
     'steam_finder' => 'Steam Finder',
-    'home' => 'בית',
-    'website' => 'אתר אינטרנט ראשי',
-    'vip_store' => 'חנות VIP',
 
     'enter_steamid' => 'הזן SteamID',
     'search_placeholder' => 'SteamID / SteamID3 / SteamID64 / כתובת אתר מותאמת אישית / כתובת אתר מלאה',
