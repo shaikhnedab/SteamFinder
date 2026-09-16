@@ -1,0 +1,16 @@
+.git
+.github
+.openchamber
+.env
+.env.backup
+/vendor
+/node_modules
+/public/hot
+/public/storage
+docker-compose.override.yml
+storage/logs/*.log
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+screenshots
+*.log

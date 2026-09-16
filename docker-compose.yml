@@ -1,10 +1,16 @@
-version: '3.8'
 services:
   app:
-    build: ./
-    restart: "always"
+    build: .
+    image: steamfinder:latest
+    container_name: steamfinder
+    restart: unless-stopped
     ports:
-      - 8080:8000
+      - "8080:8000"
     environment:
-      - APP_LANG=en
-      - STEAM_API_KEY=
+      APP_NAME: SteamFinder
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_LANG: ${APP_LANG:-en}
+      # Required: export it first (or put it in a shell .env file next to this compose file).
+      # Get a key at https://steamcommunity.com/dev/apikey
+      STEAM_API_KEY: ${STEAM_API_KEY:?Set STEAM_API_KEY before running — e.g. STEAM_API_KEY=xxx docker compose up}

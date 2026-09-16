@@ -1,67 +1,36 @@
-# Use Ubuntu as the base image
-FROM ubuntu:22.04
+# ---- dependencies ----
+FROM php:8.2-cli-alpine AS vendor
 
-# Set environment variables
-ENV DEBIAN_FRONTEND noninteractive
+RUN apk add --no-cache git unzip gmp-dev \
+ && docker-php-ext-install -j"$(nproc)" bcmath gmp
 
-# Update package lists
-RUN apt-get update && \
-    apt-get install -y \
-    software-properties-common \
-    curl \
-    git \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    nano \
-    nginx \
-    supervisor
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN add-apt-repository ppa:ondrej/php
+WORKDIR /app
 
-# Install PHP necessary packages
-RUN apt-get update && \
-    apt-get install -y \
-    php7.4 \
-    php7.4-fpm \
-    php7.4-mysql \
-    php7.4-xml \
-    php7.4-mbstring \
-    php7.4-json \
-    php7.4-curl \
-    php7.4-zip \
-    php7.4-gd \
-    php7.4-intl \
-    php7.4-bcmath \
-    php7.4-bz2 \
-    php7.4-gmp
+# Copy the full source first (composer scripts boot artisan for package discovery)
+COPY . .
+RUN cp .env.example .env \
+ && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
+ && php artisan key:generate --no-interaction
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# ---- minimal runtime ----
+FROM php:8.2-cli-alpine
 
-# Create directory for PHP-FPM socket
-RUN mkdir -p /run/php/
+RUN apk add --no-cache --virtual .build-deps "$PHPIZE_DEPS" gmp-dev libzip-dev \
+ && docker-php-ext-install -j"$(nproc)" bcmath gmp zip \
+ && apk del .build-deps \
+ && apk add --no-cache gmp libzip
 
-# Set permissions for the directory
-RUN chmod -R 755 /run/php/
-
-# Create a directory for your Laravel application
 WORKDIR /var/www/html
 
-# Copy your Laravel application files into the container
-COPY . .
+COPY --from=vendor /app /var/www/html
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-RUN mv .env.example .env
-
-# Install dependencies
-RUN composer install
-
-RUN php artisan key:generate
-
-# Expose port 8000 for Laravel serve
 EXPOSE 8000
 
-# Start Laravel development server
-CMD ["php", "artisan", "serve", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD wget -qO- http://127.0.0.1:8000/ || exit 1
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

@@ -37,6 +37,45 @@ php artisan serve
 
 Open http://127.0.0.1:8000 and enter any SteamID format, custom URL or full profile URL.
 
+## Run with Docker
+
+A minimal multi-stage Alpine image (~150 MB) is built automatically on every push to `main` and published to Docker Hub as `shaikhnedab/steamfinder`. For the automated build to push, add these repository secrets on GitHub (`Settings → Secrets and variables → Actions`): `DOCKER_USERNAME` and `DOCKER_PASSWORD` (a Docker Hub access token).
+
+### With docker compose (recommended)
+
+```bash
+# 1. Export your Steam API key (get one at https://steamcommunity.com/dev/apikey)
+export STEAM_API_KEY=your_key_here
+
+# 2. Build and start (app will be at http://localhost:8080)
+docker compose up --build -d
+
+# 3. Follow logs / stop
+docker compose logs -f
+docker compose down
+```
+
+`APP_LANG` can be set the same way (`APP_LANG=ru docker compose up --build -d`).
+
+### With docker run
+
+```bash
+# Pull the prebuilt image (or build locally: docker build -t steamfinder .)
+docker pull shaikhnedab/steamfinder:latest
+
+docker run -d \
+  --name steamfinder \
+  --restart unless-stopped \
+  -p 8080:8000 \
+  -e APP_ENV=production \
+  -e APP_DEBUG=false \
+  -e APP_LANG=en \
+  -e STEAM_API_KEY=your_key_here \
+  shaikhnedab/steamfinder:latest
+```
+
+Then open http://localhost:8080. Check health with `docker inspect steamfinder --format '{{.State.Health.Status}}'`.
+
 ## Accepted input formats
 
 - SteamID — e.g. `STEAM_1:0:84901`
