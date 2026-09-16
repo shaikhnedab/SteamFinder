@@ -26,23 +26,23 @@
                 {{ __('trans.steam_finder') }}
             </a>
 
-            <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">
-                <span></span><span></span><span></span>
-            </button>
-
             <nav class="nav-menu" id="navMenu" aria-label="Main navigation">
                 <a class="nav-link {{ request()->is('/') ? 'is-active' : '' }}" href="/">
                     <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     {{ __('trans.home') }}
                 </a>
-                <a class="nav-link" href="https://example.com" target="_blank" rel="noopener">
+                @if (config('app.main_website_url'))
+                <a class="nav-link" href="{{ config('app.main_website_url') }}" target="_blank" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                     {{ __('trans.website') }}
                 </a>
-                <a class="nav-link" href="https://example.com/pricing" target="_blank" rel="noopener">
+                @endif
+                @if (config('app.vip_store_url'))
+                <a class="nav-link" href="{{ config('app.vip_store_url') }}" target="_blank" rel="noopener">
                     <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     {{ __('trans.vip_store') }}
                 </a>
+                @endif
             </nav>
 
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">

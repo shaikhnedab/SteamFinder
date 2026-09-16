@@ -93,6 +93,8 @@ Then open http://localhost:8080. Check health with `docker inspect steamfinder -
 |------------------|----------------------------------------------------------|
 | `STEAM_API_KEY`  | Steam Web API key (required for lookups)                 |
 | `APP_LANG`       | UI language: `en`, `es`, `ru`, `he`, `zh` (default `en`) |
+| `MAIN_WEBSITE_URL` | Navbar "Main Website" link URL (empty = hidden)        |
+| `VIP_STORE_URL`  | Navbar "VIP Store" link URL (empty = hidden)             |
 
 Translation files live in `resources/lang/{lang}/trans.php`.
 
