@@ -1,5 +1,5 @@
 # ---- dependencies ----
-FROM php:8.2-cli-alpine AS vendor
+FROM php:8.4-cli-alpine AS vendor
 
 # bcmath + gmp are hard composer platform requirements (syntax/steam-api, xpaw/steamid).
 # NOTE: $PHPIZE_DEPS is intentionally unquoted (space-separated package list).
@@ -18,7 +18,7 @@ RUN cp .env.example .env \
  && php artisan key:generate --no-interaction
 
 # ---- minimal runtime: single process, plain HTTP ----
-FROM php:8.2-cli-alpine
+FROM php:8.4-cli-alpine
 
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS gmp-dev libzip-dev \
  && docker-php-ext-install -j"$(nproc)" bcmath gmp zip \

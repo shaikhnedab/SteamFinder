@@ -6,7 +6,7 @@ Dark/light themes, responsive layout, click-to-copy values, multi-language UI.
 
 ## Requirements
 
-- PHP 8.0+ with extensions: `mbstring`, `bcmath`, `gmp`, `xml`, `ctype`, `curl`, `fileinfo`, `json`, `openssl`, `tokenizer`
+- PHP 8.4+ with extensions: `mbstring`, `bcmath`, `gmp`, `xml`, `ctype`, `curl`, `fileinfo`, `json`, `openssl`, `tokenizer`
 - [Composer](https://getcomposer.org/) 2.x
 - A free Steam Web API key: https://steamcommunity.com/dev/apikey
 
@@ -137,7 +137,7 @@ server {
 
     location ~ \.php$ {
         include fastcgi_params;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;  # or 127.0.0.1:9000
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;  # or 127.0.0.1:9000
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
     }
 
