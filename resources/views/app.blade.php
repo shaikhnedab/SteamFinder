@@ -7,7 +7,11 @@
     <meta name="theme-color" content="#0a0f1e">
     <title>@yield('title')</title>
 
+    @if (config('app.favicon_url'))
+    <link rel="icon" href="{{ config('app.favicon_url') }}"/>
+    @else
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}"/>
+    @endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +25,11 @@
         <div class="container nav-inner">
             <a class="brand" href="/">
                 <span class="brand-mark" aria-hidden="true">
+                    @if (config('app.brand_logo_url'))
+                    <img class="brand-logo" src="{{ config('app.brand_logo_url') }}" alt="" width="30" height="30">
+                    @else
                     <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M8.5 14.5a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6z"/><path d="M15.5 9a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6z"/></svg>
+                    @endif
                 </span>
                 {{ __('trans.steam_finder') }}
             </a>

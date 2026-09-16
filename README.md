@@ -93,8 +93,27 @@ Then open http://localhost:8080. Check health with `docker inspect steamfinder -
 |------------------|----------------------------------------------------------|
 | `STEAM_API_KEY`  | Steam Web API key (required for lookups)                 |
 | `APP_LANG`       | UI language: `en`, `es`, `ru`, `he`, `zh` (default `en`) |
+| `FAVICON_URL`    | Browser tab icon URL (empty = built-in `favicon.png`)    |
+| `BRAND_LOGO_URL` | Navbar logo image URL (empty = built-in SVG icon)        |
 
 Translation files live in `resources/lang/{lang}/trans.php`.
+
+## Custom branding (favicon + navbar logo)
+
+Two options, no code changes needed:
+
+1. **Remote URL** — set the full URL in `.env`:
+   ```bash
+   FAVICON_URL=https://example.com/my-icon.svg
+   BRAND_LOGO_URL=https://example.com/my-logo.png
+   ```
+2. **Upload your own file** — drop the file into `public/uploads/` (via SFTP, git, or the Docker volume) and point the env var at the local path:
+   ```bash
+   FAVICON_URL=/uploads/my-icon.svg
+   BRAND_LOGO_URL=/uploads/my-logo.png
+   ```
+
+   Supported formats: `.ico`, `.png`, `.svg` (favicon); `.png`, `.svg`, `.jpg` (logo, shown at 30×30). Leave a var empty to keep the default. (There is intentionally no in-browser uploader — the app has no login system, and a public upload endpoint would let anyone write files to your server.)
 
 ## Deployment (Apache example)
 

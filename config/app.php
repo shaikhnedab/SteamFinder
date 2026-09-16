@@ -30,6 +30,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Branding (favicon + navbar logo)
+    |--------------------------------------------------------------------------
+    |
+    | Full URL (https://...) or local public path (/uploads/my-icon.svg).
+    | Leave empty to use the built-in defaults.
+    |
+    */
+
+    'favicon_url' => env('FAVICON_URL'),
+    'brand_logo_url' => env('BRAND_LOGO_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |
