@@ -28,8 +28,9 @@ php artisan key:generate
 # 4. Add your Steam API key to .env
 # STEAM_API_KEY=your_key_here   (get one at https://steamcommunity.com/dev/apikey)
 
-# 5. Fix storage permissions (Linux)
-chmod -R 775 storage bootstrap/cache
+# 5. Fix storage permissions (Linux) — the webserver user must be able
+#    to write caches, sessions and compiled views
+chmod -R 777 storage bootstrap/cache
 
 # 6. Start the local server (development only — for real hosting point
 #    Apache/nginx at the public/ directory, see Deployment below)
@@ -40,7 +41,7 @@ Open http://127.0.0.1:8000 and enter any SteamID format, custom URL or full prof
 
 ## Run with Docker
 
-A minimal multi-stage Alpine image (~150 MB, single `artisan serve` process) is built automatically on every push to `main` and published to GitHub Container Registry as `ghcr.io/shaikhnedab/steamfinder`. It authenticates with the `GHCR_PAT` repository secret (`Settings → Secrets and variables → Actions`), already configured.
+A minimal multi-stage Alpine image (~150 MB, single `artisan serve` process) is built automatically on every push to `main` and published to GitHub Container Registry as `ghcr.io/shaikhnedab/steamfinder`. It authenticates with the auto-rotating `GITHUB_TOKEN` — no secrets to configure.
 
 ### With docker compose (recommended)
 
