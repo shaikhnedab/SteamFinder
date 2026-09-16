@@ -18,12 +18,15 @@
     ];
     $psClass = $psBadge[$ps] ?? 'is-offline';
 
-    /* VAC status */
-    $vb = $bans['vb'] ?? 'No Bans';
-    if (is_numeric($vb)) {
-        $vb = ((int) $vb === 0) ? 'No Bans' : 'Banned';
-    }
-    $vbClass = ($vb === 'Banned') ? 'badge-bad' : 'badge-good';
+    /* VAC status — API returns a boolean, but stay defensive so
+       numeric/string values still render a sensible badge. */
+    $vbRaw = $bans['vb'] ?? false;
+    $isBanned = $vbRaw === true || $vbRaw === 1 || $vbRaw === '1'
+        || $vbRaw === 'Banned'
+        || (is_numeric($vbRaw) && (int) $vbRaw !== 0)
+        || (!empty($bans['novb']) && (int) $bans['novb'] > 0);
+    $vb = $isBanned ? 'Banned' : 'No Bans';
+    $vbClass = $isBanned ? 'badge-bad' : 'badge-good';
 
     /* Days since last ban */
     $dslb = $bans['dslb'] ?? 'No Bans';
