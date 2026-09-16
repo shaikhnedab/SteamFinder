@@ -1,7 +1,9 @@
 # ---- dependencies ----
 FROM php:8.2-cli-alpine AS vendor
 
-RUN apk add --no-cache git unzip gmp-dev \
+# bcmath + gmp are hard composer platform requirements (syntax/steam-api, xpaw/steamid).
+# NOTE: $PHPIZE_DEPS is intentionally unquoted (space-separated package list).
+RUN apk add --no-cache $PHPIZE_DEPS git unzip gmp-dev \
  && docker-php-ext-install -j"$(nproc)" bcmath gmp
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -18,7 +20,7 @@ RUN cp .env.example .env \
 # ---- minimal runtime: single process, plain HTTP ----
 FROM php:8.2-cli-alpine
 
-RUN apk add --no-cache --virtual .build-deps "$PHPIZE_DEPS" gmp-dev libzip-dev \
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS gmp-dev libzip-dev \
  && docker-php-ext-install -j"$(nproc)" bcmath gmp zip \
  && apk del .build-deps \
  && apk add --no-cache gmp libzip
