@@ -39,7 +39,7 @@ Open http://127.0.0.1:8000 and enter any SteamID format, custom URL or full prof
 
 ## Run with Docker
 
-A minimal multi-stage Alpine image (~150 MB) is built automatically on every push to `main` and published to Docker Hub as `shaikhnedab/steamfinder`. For the automated build to push, add these repository secrets on GitHub (`Settings → Secrets and variables → Actions`): `DOCKER_USERNAME` and `DOCKER_PASSWORD` (a Docker Hub access token).
+A minimal multi-stage Alpine image (~200 MB: nginx + php-fpm + supervisor, no dev tools) is built automatically on every push to `main` and published to Docker Hub as `shaikhnedab/steamfinder`. For the automated build to push, add these repository secrets on GitHub (`Settings → Secrets and variables → Actions`): `DOCKER_USERNAME` and `DOCKER_PASSWORD` (a Docker Hub access token).
 
 ### With docker compose (recommended)
 
@@ -74,7 +74,7 @@ docker run -d \
   shaikhnedab/steamfinder:latest
 ```
 
-Then open http://localhost:8080. Check health with `docker inspect steamfinder --format '{{.State.Health.Status}}'`.
+Then open http://localhost:8080 (nginx serves the app on container port 80, mapped to host 8080). Check health with `docker inspect steamfinder --format '{{.State.Health.Status}}'`.
 
 ## Accepted input formats
 
@@ -121,11 +121,6 @@ For production also run `php artisan config:cache` and `php artisan route:cache`
 
 - Never commit your `.env` file — it is git-ignored for a reason. Only `.env.example` (with empty values) belongs in the repo.
 - If lookups fail with "Failed to connect", check that the server can reach `https://api.steampowered.com` and that your key is valid.
-
-## Screenshots
-
-![App Screenshot](https://github.com/shaikhnedab/SteamFinder/blob/main/screenshots/s1.png)
-![App Screenshot](https://github.com/shaikhnedab/SteamFinder/blob/main/screenshots/s2.png)
 
 ## Contributions
 
