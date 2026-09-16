@@ -31,7 +31,8 @@ php artisan key:generate
 # 5. Fix storage permissions (Linux)
 chmod -R 775 storage bootstrap/cache
 
-# 6. Start the local server
+# 6. Start the local server (development only — for real hosting point
+#    Apache/nginx at the public/ directory, see Deployment below)
 php artisan serve
 ```
 
@@ -39,7 +40,7 @@ Open http://127.0.0.1:8000 and enter any SteamID format, custom URL or full prof
 
 ## Run with Docker
 
-A minimal multi-stage Alpine image (~200 MB: nginx + php-fpm + supervisor, no dev tools) is built automatically on every push to `main` and published to Docker Hub as `shaikhnedab/steamfinder`. For the automated build to push, add these repository secrets on GitHub (`Settings → Secrets and variables → Actions`): `DOCKER_USERNAME` and `DOCKER_PASSWORD` (a Docker Hub access token).
+A minimal multi-stage Alpine image (~150 MB, single `artisan serve` process) is built automatically on every push to `main` and published to GitHub Container Registry as `ghcr.io/shaikhnedab/steamfinder`. It authenticates with the `GHCR_PAT` repository secret (`Settings → Secrets and variables → Actions`), already configured.
 
 ### With docker compose (recommended)
 
@@ -61,7 +62,8 @@ docker compose down
 
 ```bash
 # Pull the prebuilt image (or build locally: docker build -t steamfinder .)
-docker pull shaikhnedab/steamfinder:latest
+# If the package is private: docker login ghcr.io  (or set the package to public)
+docker pull ghcr.io/shaikhnedab/steamfinder:latest
 
 docker run -d \
   --name steamfinder \
@@ -71,10 +73,10 @@ docker run -d \
   -e APP_DEBUG=false \
   -e APP_LANG=en \
   -e STEAM_API_KEY=your_key_here \
-  shaikhnedab/steamfinder:latest
+  ghcr.io/shaikhnedab/steamfinder:latest
 ```
 
-Then open http://localhost:8080 (nginx serves the app on container port 80, mapped to host 8080). Check health with `docker inspect steamfinder --format '{{.State.Health.Status}}'`.
+Then open http://localhost:8080. Check health with `docker inspect steamfinder --format '{{.State.Health.Status}}'`.
 
 ## Accepted input formats
 
@@ -115,7 +117,61 @@ sudo a2ensite steamfinder.conf
 sudo systemctl restart apache2
 ```
 
-For production also run `php artisan config:cache` and `php artisan route:cache` after editing `.env`.
+## Deployment (nginx example, normal hosting)
+
+Point the document root at `public/` and pass PHP files to php-fpm:
+
+```nginx
+server {
+    listen 80;
+    server_name steamfinder.example.com;
+    root /var/www/html/SteamFinder/public;
+    index index.php;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;  # or 127.0.0.1:9000
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/steamfinder /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## Reverse proxy (nginx in front of Docker)
+
+If the app runs in Docker (`docker compose up`, host port 8080), put host nginx in front for TLS/canonical hostnames:
+
+```nginx
+server {
+    listen 80;
+    server_name steamfinder.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+For production also run `php artisan config:cache` after editing `.env`. (Do **not** run `route:cache` — the `/` route is a closure, which Laravel cannot cache.)
 
 ## Notes
 
