@@ -44,8 +44,14 @@ php artisan key:generate
 # add your key from https://steamcommunity.com/dev/apikey
 #   STEAM_API_KEY=your_key_here
 
-# the web server user must be able to write caches, sessions and compiled views
-chmod -R 775 storage bootstrap/cache
+# the web server user must own the writable paths: sessions, cache,
+# compiled views and logs. chown is the part that matters — chmod on
+# files owned by another user grants nothing to you.
+sudo chown -R "$SUDO_USER:$SUDO_USER" storage bootstrap/cache
+# dirs 775, files 664. Do not use `chmod -R 775`: that marks the tracked
+# storage/**/.gitignore files executable and dirties `git status`.
+find storage bootstrap/cache -type d -exec chmod 775 {} \;
+find storage bootstrap/cache -type f -exec chmod 664 {} \;
 
 php artisan serve
 ```
@@ -138,6 +144,42 @@ The container runs as `www-data` and forks eight PHP workers, so one slow Steam 
 
 Point the document root at `public/`. Nothing above it is web-reachable.
 
+### File ownership (do this first)
+
+The app writes to four places at runtime, and all of them live under `storage/`
+plus `bootstrap/cache/`:
+
+| Path | Used for |
+|---|---|
+| `storage/framework/sessions` | session files (`SESSION_DRIVER=file`) |
+| `storage/framework/cache/data` | the Steam response cache and rate-limit counters |
+| `storage/framework/views` | compiled Blade templates |
+| `storage/logs` | `laravel.log` |
+| `bootstrap/cache` | `config:cache`, `route:cache`, package manifest |
+
+None of them are writable unless the **PHP-FPM user** owns them. A `git clone`
+run as root leaves every one of them root-owned, and PHP-FPM then fails on the
+first request. Give them to the FPM user, not to your shell user:
+
+```bash
+# find the user FPM actually runs as — usually www-data
+grep -E '^(user|group)' /etc/php/*/fpm/pool.d/www.conf
+
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo find storage bootstrap/cache -type d -exec chmod 775 {} \;
+sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
+```
+
+`chmod` on its own does not fix this: on a file owned by `root:root`, mode
+`775` grants write to *root's group*, and `www-data` is not in it. `chown` is
+the load-bearing part.
+
+If you would rather not have a log file at all, `LOG_CHANNEL=stderr` sends logs
+to PHP's stderr, which FPM already forwards to the nginx error log. That dodges
+`storage/logs` but fixes nothing else, so the `chown` is still needed.
+
+### Web server
+
 **nginx**
 
 ```nginx
@@ -186,6 +228,23 @@ closure, so it can be serialized. The app is stateless, so there is nothing to
 optimize beyond that.
 
 ## Troubleshooting
+
+**`storage/logs/laravel.log" could not be opened in append mode: Permission
+denied`** — the web server user cannot write to `storage/`, almost always
+because the files are root-owned from a `git clone` run as root. See
+[File ownership](#file-ownership-do-this-first).
+
+This one is worth understanding rather than just fixing. Laravel tried to log a
+problem, the log write itself failed, and the failure is an *uncaught*
+`UnexpectedValueException` — so the request 500s and the message you are reading
+is the logging failure, not the original fault. Fix the ownership first, then
+re-read `storage/logs/laravel.log`: the real error is very likely still in there
+and may be unrelated to permissions.
+
+Note the second line, `tempnam(): file created in the system's temporary
+directory`. Monolog only falls back to the system temp dir when it cannot write
+in the log directory *either*, which confirms the directory itself is
+unwritable rather than just the file.
 
 **"Failed to get data, please check the ID!"** — the identifier parsed but Steam
 returned no player. Usually a genuinely nonexistent account. If it happens for
