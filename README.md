@@ -2,7 +2,7 @@
 
 Paste any Steam identifier, get every format it can become — plus profile state, VAC status, invite link and CS:GO hours. One click copies any value.
 
-Built on Laravel 8 with a blueprint-and-copper instrument-panel UI shared with the [HVAC Design Suite](https://github.com/shaikhnedab/hvac). No database, no build step, no JavaScript framework.
+Built on Laravel 13 with a blueprint-and-copper instrument-panel UI shared with the [HVAC Design Suite](https://github.com/shaikhnedab/hvac). No database, no build step, no JavaScript framework.
 
 ## Features
 
@@ -18,17 +18,17 @@ Built on Laravel 8 with a blueprint-and-copper instrument-panel UI shared with t
 
 ## Requirements
 
-- **PHP 8.0+** with `mbstring`, `gmp`, `xml`, `ctype`, `curl`, `fileinfo`, `json`, `openssl`, `tokenizer`
+- **PHP 8.3+** with `mbstring`, `gmp`, `xml`, `ctype`, `curl`, `fileinfo`, `json`, `openssl`, `tokenizer`
   (`gmp` is required by `xpaw/steamid`, which does all SteamID conversions; the Docker image is PHP 8.4)
 - **Composer 2.x**
 - A free [Steam Web API key](https://steamcommunity.com/dev/apikey)
 
 No database or queue is required. The app uses file-backed sessions and cache.
 
-Runtime dependencies are deliberately few: `laravel/framework`, `guzzlehttp/guzzle`
-(its HTTP client), `xpaw/steamid` for ID conversion, and `fruitcake/laravel-cors`
-for the CORS middleware. Steam is queried with Laravel's own HTTP client rather
-than a Steam SDK, so every call has an explicit timeout.
+Runtime dependencies are deliberately few: `laravel/framework` and
+`guzzlehttp/guzzle` (its HTTP client), plus `xpaw/steamid` for ID conversion.
+Steam is queried with Laravel's own HTTP client rather than a Steam SDK, so
+every call has an explicit timeout. CORS is handled by the framework itself.
 
 ## Quick start
 
@@ -59,13 +59,13 @@ Everything lives in `.env`. Only `STEAM_API_KEY` is required.
 | Variable | Default | Purpose |
 |---|---|---|
 | `STEAM_API_KEY` | — | **Required.** Steam Web API key |
-| `APP_LANG` | `en` | UI language: `en`, `es`, `ru`, `he`, `zh` |
+| `APP_LOCALE` | `en` | UI language: `en`, `es`, `ru`, `he`, `zh` (legacy name `APP_LANG` still works) |
 | `APP_DEBUG` | `false` | Never enable in production — it prints stack traces |
 | `APP_URL` | `http://localhost` | Canonical URL, used for generated links |
 | `FAVICON_URL` | built-in `brand-mark.svg` | Browser tab icon. Full URL or a path under `public/` |
 | `BRAND_LOGO_URL` | built-in `brand-mark.svg` | Navbar logo. Full URL or a path under `public/` |
 
-Translations live in `resources/lang/{lang}/trans.php`. All five files are kept in key parity — add a key to all of them or none.
+Translations live in `lang/{lang}/trans.php`. All five files are kept in key parity — add a key to all of them or none.
 
 ### Custom branding
 
@@ -123,13 +123,14 @@ Or without compose:
 ```bash
 docker run -d --name steamfinder --restart unless-stopped \
   -p 8080:8000 \
-  -e APP_ENV=production -e APP_DEBUG=false -e APP_LANG=en \
+  -e APP_ENV=production -e APP_DEBUG=false -e APP_LOCALE=en \
   -e STEAM_API_KEY=your_key_here \
   ghcr.io/shaikhnedab/steamfinder:latest
 ```
 
-Set `APP_LANG` the same way for a non-English UI. Check health with
-`docker inspect steamfinder --format '{{.State.Health.Status}}'`.
+Set `APP_LOCALE` the same way for a non-English UI. Check health with
+`docker inspect steamfinder --format '{{.State.Health.Status}}'`, or hit the
+built-in `/up` endpoint (also available on a normal install).
 
 The container runs as `www-data` and forks eight PHP workers, so one slow Steam call cannot block the rest of the page.
 
@@ -180,9 +181,9 @@ After editing `.env` on a production host, run:
 php artisan config:cache
 ```
 
-Do **not** run `php artisan route:cache` — the `/` route is a closure, which
-Laravel cannot serialize. The app is stateless, so `optimize` is not useful
-either.
+`php artisan route:cache` works — the `/` route uses `Route::view()` rather than a
+closure, so it can be serialized. The app is stateless, so there is nothing to
+optimize beyond that.
 
 ## Troubleshooting
 

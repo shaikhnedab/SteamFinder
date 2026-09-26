@@ -18,6 +18,8 @@ RUN cp .env.example .env \
  && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
  && php artisan key:generate --no-interaction
 
+# There is no database, so there is nothing to migrate.
+
 # ---- minimal runtime: single process, plain HTTP ----
 FROM php:8.4-cli-alpine
 
@@ -48,4 +50,6 @@ USER www-data
 
 # NOTE: artisan serve is fine for dev/small deploys. For production traffic
 # put host-level nginx in front as a reverse proxy (see README).
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# --no-reload is required: Laravel 13 refuses to honour PHP_CLI_SERVER_WORKERS
+# (and silently runs a single server) when the auto-reload watcher is on.
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000", "--no-reload"]

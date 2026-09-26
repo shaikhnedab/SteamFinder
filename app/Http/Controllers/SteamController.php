@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use SteamID;
 
@@ -161,7 +161,7 @@ class SteamController extends Controller
             return null;
         }
 
-        if (!is_array($user) || !isset($user['response']) || !is_array($user['response'])) {
+        if (! is_array($user) || ! isset($user['response']) || ! is_array($user['response'])) {
             return null;
         }
 
@@ -174,7 +174,6 @@ class SteamController extends Controller
         return null;
     }
 
-
     public function show($id)
     {
         try {
@@ -183,7 +182,7 @@ class SteamController extends Controller
             return redirect('/')->with('error', __('trans.error_check_id'));
         }
 
-        if (!$s->IsValid()) {
+        if (! $s->IsValid()) {
             return redirect('/')->with('error', __('trans.error_check_id'));
         }
 
@@ -205,7 +204,7 @@ class SteamController extends Controller
             return redirect('/')->with('error', __('trans.error_api_unreachable'));
         }
 
-        if (!is_array($data) || !isset($data['response']) || !is_array($data['response'])) {
+        if (! is_array($data) || ! isset($data['response']) || ! is_array($data['response'])) {
             return redirect('/')->with('error', __('trans.error_check_id'));
         }
 
@@ -228,19 +227,19 @@ class SteamController extends Controller
         }
 
         $data['si64'] = $players[0]['steamid'];
-        $data['cvs'] = $players[0]['communityvisibilitystate'] ?? "";
-        $data['prs'] = $players[0]['profilestate'] ?? "";
-        $data['pn'] = $players[0]['personaname'] ?? "";
-        $data['purl'] = $players[0]['profileurl'] ?? "";
-        $data['av'] = $players[0]['avatar'] ?? "";
-        $data['avm'] = $players[0]['avatarmedium'] ?? "";
-        $data['avf'] = $players[0]['avatarfull'] ?? "";
-        $data['avhash'] = $players[0]['avatarhash'] ?? "";
-        $data['ps'] = $players[0]['personastate'] ?? "";
-        $data['rn'] = $players[0]['realname'] ?? "";
-        $data['pcid'] = $players[0]['primaryclanid'] ?? "";
-        $data['createdat'] = $players[0]['timecreated'] ?? "";
-        $data['psf'] = $players[0]['personastateflags'] ?? "";
+        $data['cvs'] = $players[0]['communityvisibilitystate'] ?? '';
+        $data['prs'] = $players[0]['profilestate'] ?? '';
+        $data['pn'] = $players[0]['personaname'] ?? '';
+        $data['purl'] = $players[0]['profileurl'] ?? '';
+        $data['av'] = $players[0]['avatar'] ?? '';
+        $data['avm'] = $players[0]['avatarmedium'] ?? '';
+        $data['avf'] = $players[0]['avatarfull'] ?? '';
+        $data['avhash'] = $players[0]['avatarhash'] ?? '';
+        $data['ps'] = $players[0]['personastate'] ?? '';
+        $data['rn'] = $players[0]['realname'] ?? '';
+        $data['pcid'] = $players[0]['primaryclanid'] ?? '';
+        $data['createdat'] = $players[0]['timecreated'] ?? '';
+        $data['psf'] = $players[0]['personastateflags'] ?? '';
 
         $data['steam3'] = $s->RenderSteam3();
         $data['steam32'] = $s->RenderSteam2();
