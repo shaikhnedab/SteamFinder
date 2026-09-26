@@ -2,7 +2,7 @@
 
 Paste any Steam identifier, get every format it can become — plus profile state, VAC status, invite link and CS:GO hours. One click copies any value.
 
-Built on Laravel 13 with a blueprint-and-copper instrument-panel UI shared with the [HVAC Design Suite](https://github.com/shaikhnedab/hvac). No database, no build step, no JavaScript framework.
+Built on Laravel 13 with a blueprint-and-copper instrument-panel UI. No database, no build step, no JavaScript framework.
 
 ## Features
 

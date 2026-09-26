@@ -10,29 +10,51 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/shaikhnedab/steamfinder
 
+# One build at a time per ref. Two rapid pushes to main otherwise queue a
+# second run that burns ~90s of runner time publishing an image nobody pulls,
+# and can finish *after* the newer one, leaving :latest pointing at older code.
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Pinned on purpose. `ubuntu-latest` migrates to Ubuntu 26 on 2026-10-19,
+    # which would silently change the toolchain under an otherwise
+    # reproducible build. Bump this by hand once the new image is verified.
+    runs-on: ubuntu-24.04
+
+    # Without this a stuck build holds a runner for the full 6h default. The
+    # happy path is ~90s, so 20 minutes is generous.
+    timeout-minutes: 20
+
     permissions:
       contents: read
       packages: write
 
     steps:
+      # Actions are pinned to commit SHAs rather than tags. This job holds
+      # `packages: write` and publishes a public image, so what executes should
+      # not be able to change under you — a tag can be moved by whoever owns
+      # the repo, a commit SHA cannot. The trailing comment is the
+      # human-readable version; bump both together.
+      #
+      # These are the first majors of each action that declare `using: node24`.
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push minimal Alpine image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           push: true
