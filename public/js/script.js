@@ -1,9 +1,15 @@
 /* ============================================================
    SteamFinder — local vanilla JS
-   Replaces jQuery + Popper + Bootstrap + ClipboardJS (all removed)
+   Zero dependencies.
    ============================================================ */
 (function () {
     'use strict';
+
+    /* Translations injected by the Blade layout. */
+    var I18N = window.STEAMFINDER_I18N || {};
+    function t(key, fallback) {
+        return I18N[key] || fallback;
+    }
 
     /* ---------- Theme toggle ---------- */
 
@@ -12,16 +18,28 @@
     var STORAGE_KEY = 'steamfinder-theme';
 
     function getPreferredTheme() {
-        var saved = localStorage.getItem(STORAGE_KEY);
+        var saved = null;
+        try {
+            saved = localStorage.getItem(STORAGE_KEY);
+        } catch (e) {
+            /* storage unavailable — fall through to the OS preference */
+        }
         if (saved) return saved;
         return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     }
 
     function applyTheme(theme) {
         html.setAttribute('data-theme', theme);
-        localStorage.setItem(STORAGE_KEY, theme);
+        try {
+            localStorage.setItem(STORAGE_KEY, theme);
+        } catch (e) {
+            /* storage unavailable — the theme still applies for this page */
+        }
     }
 
+    /* The inline <head> script already resolved and applied the theme to
+       avoid a flash of the wrong canvas; re-assert it here so behaviour
+       stays correct if that script is ever removed. */
     applyTheme(getPreferredTheme());
 
     if (themeToggle) {
@@ -29,6 +47,36 @@
             var current = html.getAttribute('data-theme') || 'dark';
             applyTheme(current === 'dark' ? 'light' : 'dark');
         });
+    }
+
+    /* ---------- Toast ---------- */
+
+    var toastHost = null;
+
+    function toast(message) {
+        if (!toastHost) {
+            toastHost = document.createElement('div');
+            toastHost.className = 'toast-host';
+            toastHost.setAttribute('role', 'status');
+            toastHost.setAttribute('aria-live', 'polite');
+            document.body.appendChild(toastHost);
+        }
+
+        var el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = message;
+        toastHost.appendChild(el);
+
+        requestAnimationFrame(function () {
+            el.classList.add('show');
+        });
+
+        window.setTimeout(function () {
+            el.classList.remove('show');
+            window.setTimeout(function () {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 250);
+        }, 2200);
     }
 
     /* ---------- Flash message dismiss ---------- */
@@ -65,6 +113,7 @@
                 ok = false;
             }
             if (ok) showCopied(btn);
+            else toast(t('copyFailed', 'Copy failed'));
         };
 
         if (navigator.clipboard && window.isSecureContext) {
@@ -81,7 +130,9 @@
         var row = btn.closest('[data-copy-row]');
         if (row) row.classList.add('is-copied');
         btn.classList.add('is-copied');
-        btn.setAttribute('aria-label', 'Copied');
+        btn.setAttribute('aria-label', t('copied', 'Copied'));
+
+        toast(t('copied', 'Copied to clipboard'));
 
         window.clearTimeout(btn._copyTimer);
         btn._copyTimer = window.setTimeout(function () {

@@ -1,10 +1,11 @@
 # ---- dependencies ----
 FROM php:8.4-cli-alpine AS vendor
 
-# bcmath + gmp are hard composer platform requirements (syntax/steam-api, xpaw/steamid).
+# gmp is a hard platform requirement of xpaw/steamid, which does the SteamID
+# <-> SteamID3/SteamID64 conversions. Nothing else needs a math extension.
 # NOTE: $PHPIZE_DEPS is intentionally unquoted (space-separated package list).
 RUN apk add --no-cache $PHPIZE_DEPS git unzip gmp-dev \
- && docker-php-ext-install -j"$(nproc)" bcmath gmp
+ && docker-php-ext-install -j"$(nproc)" gmp
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -21,7 +22,7 @@ RUN cp .env.example .env \
 FROM php:8.4-cli-alpine
 
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS gmp-dev libzip-dev \
- && docker-php-ext-install -j"$(nproc)" bcmath gmp zip \
+ && docker-php-ext-install -j"$(nproc)" gmp zip \
  && apk del .build-deps \
  && apk add --no-cache gmp libzip
 
@@ -35,6 +36,15 @@ EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD wget -qO- http://127.0.0.1:8000/ || exit 1
+
+# `artisan serve` wraps PHP's built-in server, which is single-threaded by
+# default: one slow Steam API call blocks every other request (assets
+# included). Fork a small pool of workers so a slow lookup cannot stall the
+# rest of the page.
+ENV PHP_CLI_SERVER_WORKERS=8
+
+# Run unprivileged. storage/ and bootstrap/cache are already chowned above.
+USER www-data
 
 # NOTE: artisan serve is fine for dev/small deploys. For production traffic
 # put host-level nginx in front as a reverse proxy (see README).

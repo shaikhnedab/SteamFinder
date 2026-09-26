@@ -17,6 +17,9 @@
         'Away' => 'is-away',
     ];
     $psClass = $psBadge[$ps] ?? 'is-offline';
+    /* $ps stays the canonical English key that drives $psClass; only the
+       displayed string is localized. */
+    $psText = __('trans.state_'.strtolower($ps));
 
     /* VAC status — API returns a boolean, but stay defensive so
        numeric/string values still render a sensible badge. */
@@ -25,20 +28,24 @@
         || $vbRaw === 'Banned'
         || (is_numeric($vbRaw) && (int) $vbRaw !== 0)
         || (!empty($bans['novb']) && (int) $bans['novb'] > 0);
-    $vb = $isBanned ? 'Banned' : 'No Bans';
+    $vbText = $isBanned ? __('trans.banned') : __('trans.no_bans');
     $vbClass = $isBanned ? 'badge-bad' : 'badge-good';
 
-    /* Days since last ban */
-    $dslb = $bans['dslb'] ?? 'No Bans';
-    if (is_numeric($dslb)) {
-        $dslb = ((int) $dslb === 0) ? 'No Bans' : $dslb.' day(s) since last ban';
-    }
-    $dslbClass = ($dslb === 'No Bans') ? 'badge-good' : 'badge-warn';
+    /* Days since last ban — trans_choice handles the 0/1/N plural forms.
+       A non-numeric value (e.g. the empty string the controller stores when
+       the ban lookup fails) is treated as "never banned", as before. */
+    $dslbRaw = $bans['dslb'] ?? 0;
+    $dslbDays = is_numeric($dslbRaw) ? (int) $dslbRaw : 0;
+    $dslbText = trans_choice('trans.ban_days', $dslbDays, ['count' => $dslbDays]);
+    $dslbClass = $dslbDays > 0 ? 'badge-warn' : 'badge-good';
 
     /* Derived values */
     $created   = !empty($data['createdat']) ? date('F j, Y', $data['createdat']) : '';
-    $csgoHours = (isset($hours['csgo']) && !empty($hours['csgo']->playtimeForever))
-        ? number_format(round($hours['csgo']->playtimeForever / 60, 0)).' Hours'
+    /* CS:GO hours. The controller normalises the owned-games payload to
+       ['playtime_forever' => minutes]; 0 / absent renders the em-dash. */
+    $csgoMinutes = $hours['csgo']['playtime_forever'] ?? 0;
+    $csgoHours   = $csgoMinutes > 0
+        ? number_format(round($csgoMinutes / 60, 0)).' Hours'
         : '';
     $hex    = 'STEAM:'.strtoupper(dechex($data['si64']));
     $invite = !empty($data['invite_url']) ? 'https://s.team/p/'.$data['invite_url'] : '';
@@ -68,40 +75,46 @@
 
 @section('content')
 
-<section class="card profile-card">
+<section class="readout-panel">
     <div class="profile-head">
-        <a class="avatar-link" href="{{ $data['purl'] }}" target="_blank" rel="noopener">
-            <img class="avatar" src="{{ $data['avf'] }}" alt="{{ $data['pn'] }} avatar" width="96" height="96">
+        <a class="avatar-link" href="{{ $data['purl'] }}" target="_blank" rel="noopener" aria-label="{{ __('trans.open_profile') }} — {{ $data['pn'] }}">
+            <img class="avatar" src="{{ $data['avf'] }}" alt="{{ $data['pn'] }} avatar" width="68" height="68">
         </a>
         <div class="profile-meta">
             <div class="profile-title-row">
                 <h1 class="profile-name">
                     <a class="profile-name-link" href="{{ $data['purl'] }}" target="_blank" rel="noopener">
                         {{ $data['pn'] }}
-                        <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     </a>
-                    <span class="badge {{ $psClass }}">
-                        <span class="status-dot" aria-hidden="true"></span>{{ $ps }}
-                    </span>
                 </h1>
+                <span class="badge {{ $psClass }}">
+                    <span class="status-dot" aria-hidden="true"></span>{{ $psText }}
+                </span>
             </div>
             <p class="profile-realname">{{ !empty($data['rn']) ? $data['rn'] : '—' }}</p>
-            <div class="profile-actions">
-                <a class="btn-icon" href="{{ $data['purl'] }}" target="_blank" rel="noopener" aria-label="Open Steam profile">
-                    <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                </a>
-            </div>
+        </div>
+        <div class="profile-actions">
+            <a class="btn btn-ghost" href="{{ $data['purl'] }}" target="_blank" rel="noopener">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                {{ __('trans.open_profile') }}
+            </a>
         </div>
     </div>
 </section>
 
 <div class="results-grid">
-    <section class="card card-pad">
-        <h2 class="card-title">
-            <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
-            {{ __('trans.steamid') }}
-        </h2>
-        <div class="results-col">
+
+    <section class="panel">
+        <div class="panel-title">
+            <div>
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+                    {{ __('trans.identifiers') }}
+                </h2>
+            </div>
+        </div>
+        <div class="readout-grid">
             @foreach ($identifierRows as $row)
                 @include('partials.copy-row', $row)
             @endforeach
@@ -109,16 +122,21 @@
     </section>
 
     <div class="results-col">
-        <section class="card card-pad">
-            <h2 class="card-title">
-                <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                {{ __('trans.profile_state') }}
-            </h2>
-            <div class="results-col">
+
+        <section class="panel">
+            <div class="panel-title">
+                <div>
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        {{ __('trans.identity') }}
+                    </h2>
+                </div>
+            </div>
+            <div class="readout-grid">
                 <div class="badge-row">
                     <span class="badge-row-label">{{ __('trans.profile_state') }}</span>
                     <span class="badge {{ $psClass }}">
-                        <span class="status-dot" aria-hidden="true"></span>{{ $ps }}
+                        <span class="status-dot" aria-hidden="true"></span>{{ $psText }}
                     </span>
                 </div>
                 @foreach ($profileRows as $row)
@@ -127,34 +145,43 @@
             </div>
         </section>
 
-        <section class="card card-pad">
-            <h2 class="card-title">
-                <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                {{ __('trans.vacbanned') }}
-            </h2>
-            <div class="results-col">
+        <section class="panel">
+            <div class="panel-title">
+                <div>
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        {{ __('trans.account_safety') }}
+                    </h2>
+                </div>
+            </div>
+            <div class="badge-list">
                 <div class="badge-row">
                     <span class="badge-row-label">{{ __('trans.vacbanned') }}</span>
-                    <span class="badge {{ $vbClass }}">{{ $vb }}</span>
+                    <span class="badge {{ $vbClass }}">{{ $vbText }}</span>
                 </div>
                 <div class="badge-row">
                     <span class="badge-row-label">{{ __('trans.last_ban') }}</span>
-                    <span class="badge {{ $dslbClass }}">{{ $dslb }}</span>
+                    <span class="badge {{ $dslbClass }}">{{ $dslbText }}</span>
                 </div>
             </div>
         </section>
 
-        <section class="card card-pad">
-            <h2 class="card-title">
-                <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                {{ __('trans.csgo') }}
-            </h2>
-            <div class="results-col">
+        <section class="panel">
+            <div class="panel-title">
+                <div>
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        {{ __('trans.playtime') }}
+                    </h2>
+                </div>
+            </div>
+            <div class="readout-grid">
                 @foreach ($playRows as $row)
                     @include('partials.copy-row', $row)
                 @endforeach
             </div>
         </section>
+
     </div>
 </div>
 
