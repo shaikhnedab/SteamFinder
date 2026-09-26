@@ -30,7 +30,7 @@ return [
 
     'search_alert' => 'This app will extract your steam details by entering any steamid format.',
 
-    /* Field-instrument UI (shared design language with the HVAC suite) */
+    /* Field-instrument UI */
     'kicker' => 'Steam identity utilities',
     'hero_title' => 'Resolve any Steam ID into every format it can be.',
     'hero_text' => 'Paste a SteamID, SteamID3, SteamID64, custom URL or full profile link and get back every identifier, profile state, VAC status and invite link — one click to copy each.',

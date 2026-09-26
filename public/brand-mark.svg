@@ -6,7 +6,7 @@
     </linearGradient>
   </defs>
 
-  <!-- copper tile: same treatment as the HVAC suite brand mark -->
+  <!-- copper tile -->
   <rect width="100" height="100" rx="24" fill="url(#sf-cu)"/>
 
   <!-- instrument dial, cut in ink so it still reads at 22px -->

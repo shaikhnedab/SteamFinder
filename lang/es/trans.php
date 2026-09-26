@@ -30,7 +30,7 @@ return [
 
     'search_alert' => 'Esta aplicación extraerá sus detalles de Steam ingresando cualquier formato de SteamID.',
 
-    /* Field-instrument UI (shared design language with the HVAC suite) */
+    /* Field-instrument UI */
     'kicker' => 'Utilidades de identidad de Steam',
     'hero_title' => 'Convierte cualquier SteamID en todos los formatos que puede ser.',
     'hero_text' => 'Pega un SteamID, SteamID3, SteamID64, URL personalizada o enlace completo de perfil y obtén todos los identificadores, estado del perfil, estado de VAC y enlace de invitación: copia cada uno con un clic.',

@@ -1,8 +1,7 @@
 /* ============================================================
    Steam Finder — field-instrument theme
-   Shared design language with the HVAC Design Suite: blueprint-navy
-   canvas, copper accent, Space Grotesk for UI + IBM Plex Mono for
-   every calculated/ID readout.
+   Blueprint-navy canvas, copper accent, Space Grotesk for UI +
+   IBM Plex Mono for every calculated/ID readout.
 
    All box-model spacing uses logical properties so the existing
    dir="rtl" locales (he/ar/fa/ur) mirror correctly.
@@ -247,7 +246,7 @@ button {
   display: block;
 }
 
-/* theme toggle — hvac-style square control */
+/* theme toggle — square control, no border radius */
 .theme-toggle {
   display: inline-flex;
   align-items: center;

@@ -30,7 +30,7 @@ return [
 
     'search_alert' => '此应用将通过输入任何 steamid 格式提取您的 Steam 详细信息。',
 
-    /* Field-instrument UI (shared design language with the HVAC suite) */
+    /* Field-instrument UI */
     'kicker' => 'Steam 身份工具',
     'hero_title' => '将任意 SteamID 转换为它的所有格式。',
     'hero_text' => '粘贴 SteamID、SteamID3、SteamID64、自定义网址或完整的个人资料链接，即可获取全部标识符、个人资料状态、VAC 状态和邀请链接——每项一键复制。',

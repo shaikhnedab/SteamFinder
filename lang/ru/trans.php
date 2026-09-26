@@ -30,7 +30,7 @@ return [
 
     'search_alert' => 'Это приложение извлечет ваши данные Steam, введя любой формат steamid.',
 
-    /* Field-instrument UI (shared design language with the HVAC suite) */
+    /* Field-instrument UI */
     'kicker' => 'Инструменты идентификации Steam',
     'hero_title' => 'Преобразуйте любой SteamID во все возможные форматы.',
     'hero_text' => 'Вставьте SteamID, SteamID3, SteamID64, пользовательский URL или полную ссылку на профиль — и получите все идентификаторы, состояние профиля, статус VAC и ссылку-приглашение, каждое в один клик.',

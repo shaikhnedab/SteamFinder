@@ -30,7 +30,7 @@ return [
 
     'search_alert' => 'אפליקציה זו תחלץ את פרטי ה-steam שלך על ידי הזנת כל פורמט steam.',
 
-    /* Field-instrument UI (shared design language with the HVAC suite) */
+    /* Field-instrument UI */
     'kicker' => 'כלי זהות Steam',
     'hero_title' => 'המר כל SteamID לכל הפורמטים שהוא יכול להיות.',
     'hero_text' => 'הדבק SteamID, SteamID3, SteamID64, כתובת מותאמת אישית או קישור פרופיל מלא וקבל בחזרה את כל המזהים, מצב הפרופיל, מצב VAC וקישור ההזמנה — העתקה בלחיצה אחת לכל אחד.',
