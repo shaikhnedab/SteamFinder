@@ -251,9 +251,10 @@ mentions `CVE-2026-109618`/`109619` rather than trusting `php -v`.
 - **Docker image** — CI rebuilds `:latest` on every push *and* on a weekly
   schedule, and refuses to publish if the built image reports PHP below 8.4.27.
   To refresh a deployment:
-  - GHCR image: `docker pull ghcr.io/shaikhnedab/steamfinder:latest && docker run ...` (recreate)
+  - GHCR image: `docker pull ghcr.io/shaikhnedab/steamfinder:latest`, then stop
+    the old container and run a new one with the same options (see [Docker](#docker))
   - `docker compose`: `docker compose build --pull && docker compose up -d`
-    (`--pull` refreshes the `php:8.4-cli-alpine` base)
+    (`--pull` refreshes the `php:` base image itself)
 - **Bare metal (Debian/Ubuntu)** — `sudo apt update && sudo apt --only-upgrade install 'php8.*'`,
   then restart the pool: `sudo systemctl restart php8.5-fpm` (substitute your
   PHP branch; also restart Apache if using mod_php).
