@@ -59,7 +59,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push minimal Alpine image
+      # Build locally first: publish only after the php2shell tripwire passes,
+      # so a failing guard can never leave a vulnerable tag on the registry.
+      - name: Build image (local)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # php2shell tripwire (CVE-2026-109618/109619, fixed in PHP
+      # 8.2.35 / 8.3.36 / 8.4.27 / 8.5.12, released 2026-10-21). The image must
+      # never ship a runtime older than the fix. On this 8.4 line that means
+      # 8.4.27+; if the workflow fails here, the upstream base just has not been
+      # rebuilt yet — re-run this workflow (or wait for the weekly schedule)
+      # once php:8.4-cli-alpine is refreshed. Do not bypass this step.
+      - name: Assert built PHP includes the php2shell fix
+        run: |
+          MIN=8.4.27
+          GOT=$(docker run --rm --entrypoint php "${{ env.IMAGE_NAME }}:${{ github.sha }}" -r 'echo PHP_VERSION;')
+          echo "built image runs PHP $GOT (minimum $MIN)"
+          if [ "$(printf '%s\n' "$MIN" "$GOT" | sort -V | head -n1)" != "$MIN" ]; then
+            echo "::error::Image ships PHP $GOT, which predates the CVE-2026-109618/109619 fix ($MIN). The upstream php:8.4-cli-alpine base needs a rebuild — nothing was published."
+            exit 1
+          fi
+
+      - name: Push verified image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
@@ -69,18 +96,3 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # php2shell tripwire (CVE-2026-109618/109619, fixed in PHP
-      # 8.2.35 / 8.3.36 / 8.4.27 / 8.5.12, released 2026-10-21). The image must
-      # never ship a runtime older than the fix. On this 8.4 line that means
-      # 8.4.27+; if the workflow fails here, retag the Dockerfile base to a
-      # patched release — do not skip this step "temporarily".
-      - name: Assert built PHP includes the php2shell fix
-        run: |
-          MIN=8.4.27
-          GOT=$(docker run --rm --entrypoint php "${{ env.IMAGE_NAME }}:latest" -r 'echo PHP_VERSION;')
-          echo "built image runs PHP $GOT (minimum $MIN)"
-          if [ "$(printf '%s\n' "$MIN" "$GOT" | sort -V | head -n1)" != "$MIN" ]; then
-            echo "::error::Image ships PHP $GOT, which predates the CVE-2026-109618/109619 fix ($MIN). Retag the Dockerfile base to a patched release."
-            exit 1
-          fi
