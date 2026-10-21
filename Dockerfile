@@ -1,5 +1,9 @@
 # ---- dependencies ----
-FROM php:8.4-cli-alpine AS vendor
+# Pinned to 8.4.27: the first release with the php2shell fix
+# (CVE-2026-109618 / CVE-2026-109619, 2026-10-21). The floating 8.4-cli-alpine
+# alias can lag a release by hours, so the pin pairs with the CI assertion
+# (minimum 8.4.27). Bump both FROM lines together on 8.4.28+.
+FROM php:8.4.27-cli-alpine AS vendor
 
 # gmp is a hard platform requirement of xpaw/steamid, which does the SteamID
 # <-> SteamID3/SteamID64 conversions. Nothing else needs a math extension.
@@ -21,7 +25,7 @@ RUN cp .env.example .env \
 # There is no database, so there is nothing to migrate.
 
 # ---- minimal runtime: single process, plain HTTP ----
-FROM php:8.4-cli-alpine
+FROM php:8.4.27-cli-alpine
 
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS gmp-dev libzip-dev \
  && docker-php-ext-install -j"$(nproc)" gmp zip \
