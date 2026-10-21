@@ -189,6 +189,10 @@ server {
     root /var/www/html/SteamFinder/public;
     index index.php;
 
+    # Keep oversized/abnormal request bodies from ever reaching PHP.
+    # Mirrors post_max_size = 8M — see "PHP security" below (php2shell).
+    client_max_body_size 8m;
+
     location / { try_files $uri $uri/ /index.php?$query_string; }
 
     location ~ \.php$ {
@@ -211,6 +215,9 @@ server {
         AllowOverride All
         Require all granted
     </Directory>
+    # Keep oversized/abnormal request bodies from ever reaching PHP.
+    # Mirrors post_max_size = 8M — see "PHP security" below (php2shell).
+    LimitRequestBody 8388608
 </VirtualHost>
 ```
 
@@ -226,6 +233,51 @@ php artisan config:cache
 `php artisan route:cache` works — the `/` route uses `Route::view()` rather than a
 closure, so it can be serialized. The app is stateless, so there is nothing to
 optimize beyond that.
+
+## PHP security
+
+**php2shell (CVE-2026-109618, CVE-2026-109619, disclosed 2026-10-21)** is a pair of
+memory-corruption bugs in the PHP runtime itself, exploitable by an unauthenticated
+HTTP request against any hosted PHP older than the patched releases — it lives in
+the engine, not in application code. **Updating PHP is the only complete fix**
+([php.net advisory](https://www.php.net/archive/2026.php#2026-10-21-5)); the
+hardening below only trims the attack surface.
+
+**Patched releases:** PHP 8.2.35, 8.3.36, 8.4.27 or 8.5.12. Distributions
+backport the fix under the old version number (Ubuntu's is `8.5.4-0ubuntu1.5`),
+so a security-pocket update carries the fix — verify your package's changelog
+mentions `CVE-2026-109618`/`109619` rather than trusting `php -v`.
+
+- **Docker image** — CI rebuilds `:latest` on every push *and* on a weekly
+  schedule, and refuses to publish if the built image reports PHP below 8.4.27.
+  To refresh a deployment:
+  - GHCR image: `docker pull ghcr.io/shaikhnedab/steamfinder:latest && docker run ...` (recreate)
+  - `docker compose`: `docker compose build --pull && docker compose up -d`
+    (`--pull` refreshes the `php:8.4-cli-alpine` base)
+- **Bare metal (Debian/Ubuntu)** — `sudo apt update && sudo apt --only-upgrade install 'php8.*'`,
+  then restart the pool: `sudo systemctl restart php8.5-fpm` (substitute your
+  PHP branch; also restart Apache if using mod_php).
+
+**Shipped hardening** (`docker/php.ini`, advisory-mitigation values):
+
+| Setting | Why | CVE |
+|---|---|---|
+| `memory_limit = -1` | Removes the controllable OOM failure path; the hard boundary is the container's cgroup limit (`docker-compose.yml`) instead of a per-request cap | 109618 |
+| `file_uploads = Off`, `post_max_size = 8M` | No uploads exist in this app; huge bodies are rejected before they are stored in memory | 109618 |
+| `session.upload_progress.enabled = 0` | Kills the confirmed exploitation path through session upload progress | 109619 |
+| `fatal_error_backtraces = 0` | Kills the confirmed fatal-backtrace path (active on PHP 8.5+, ignored by older PHP) | 109619 |
+| `expose_php = Off`, `display_errors = Off` | General hygiene | — |
+
+On bare metal use the same values, applying `memory_limit` via `php_admin_value` in
+the FPM pool (or Apache config) so the application cannot override it, and enforce
+the body cap at the proxy level — `client_max_body_size 8m` (nginx) /
+`LimitRequestBody 8388608` (Apache) — as shown in the Web server section above.
+Restart all workers after changing ini settings. Do not substitute
+`RLIMIT_AS`/`RLIMIT_DATA` for the memory capacity change: per the advisory they
+can themselves trigger the vulnerable allocation-failure path.
+
+If your deployment sits behind Cloudflare, also leave the managed WAF rules
+enabled: coverage against these CVEs was deployed automatically on 21 October.
 
 ## Troubleshooting
 

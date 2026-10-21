@@ -34,6 +34,12 @@ COPY --from=vendor /app /var/www/html
 RUN chown -R www-data:www-data storage bootstrap/cache \
  && chmod -R 775 storage bootstrap/cache
 
+# php2shell hardening (CVE-2026-109618/109619, fixed in PHP 8.4.27+): ships the
+# advisory's mitigation values — memory_limit=-1 (boundary enforced by the
+# compose mem_limit), uploads off, post_max_size=8M,
+# session.upload_progress.enabled=0, fatal_error_backtraces=0.
+COPY docker/php.ini /usr/local/etc/php/php.ini
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
